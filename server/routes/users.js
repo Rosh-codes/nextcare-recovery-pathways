@@ -3,7 +3,10 @@ import {
   getUserProfile, 
   updateUserProfile, 
   getAllUsers, 
-  deleteUser 
+  deleteUser,
+  updateUserClinicalDetails,
+  clearUserClinicalDetails,
+  updatePatientProfileDetails
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -13,5 +16,8 @@ router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.get('/', protect, admin, getAllUsers);
 router.delete('/:id', protect, admin, deleteUser);
+router.put('/:id/profile', protect, admin, updatePatientProfileDetails);
+router.put('/:id/clinical', protect, admin, updateUserClinicalDetails);
+router.delete('/:id/clinical', protect, admin, clearUserClinicalDetails);
 
 export default router;
