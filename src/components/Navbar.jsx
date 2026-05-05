@@ -104,7 +104,7 @@ const Navbar = () => {
           {user && (
             <HStack spacing={3}>
               <Button as={RouterLink} to="/appointments" size="sm">
-                Book Appointment
+                {user?.role === 'patient' ? 'Book Appointment' : 'Appointments'}
               </Button>
               <Button variant="outline" size="sm" onClick={logout}>
                 Sign Out

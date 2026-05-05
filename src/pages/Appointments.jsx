@@ -35,6 +35,7 @@ const Appointments = () => {
   const [formData, setFormData] = useState({
     title: '',
     type: 'checkup',
+    doctorId: '',
     providerName: '',
     providerSpecialty: '',
     providerFacility: '',
@@ -51,6 +52,8 @@ const Appointments = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
   const selectedBg = useColorModeValue('primary.50', 'gray.700');
   const borderBase = useColorModeValue('gray.200', 'gray.600');
+  const canBookAppointment = user?.role === 'patient';
+  const pageTitle = canBookAppointment ? 'My Appointments' : 'Appointments';
 
   useEffect(() => {
     fetchAppointments();
@@ -139,6 +142,7 @@ const Appointments = () => {
     if (!selected) {
       setFormData({
         ...formData,
+        doctorId: '',
         providerName: '',
         providerSpecialty: '',
         providerFacility: ''
@@ -147,6 +151,7 @@ const Appointments = () => {
     }
     setFormData({
       ...formData,
+      doctorId: selected._id,
       providerName: selected.name,
       providerSpecialty: selected.specialty,
       providerFacility: selected.facility
@@ -165,6 +170,7 @@ const Appointments = () => {
       const payload = {
         title: formData.title,
         type: formData.type,
+        doctorId: formData.doctorId,
         provider: {
           name: formData.providerName,
           specialty: formData.providerSpecialty,
@@ -184,6 +190,7 @@ const Appointments = () => {
       setFormData({
         title: '',
         type: 'checkup',
+        doctorId: '',
         providerName: '',
         providerSpecialty: '',
         providerFacility: '',
@@ -249,48 +256,53 @@ const Appointments = () => {
       <VStack spacing={6} align="stretch">
         <HStack justify="space-between">
           <Box>
-            <Heading size="xl">My Appointments</Heading>
-            <Text color="gray.600" mt={2}>View and manage your healthcare appointments</Text>
+            <Heading size="xl">{pageTitle}</Heading>
+            <Text color="gray.600" mt={2}>
+              {canBookAppointment
+                ? 'View and manage your healthcare appointments'
+                : 'Review your assigned appointments'}
+            </Text>
           </Box>
           <Button colorScheme="primary" onClick={() => navigate('/dashboard')}>
             Back to Dashboard
           </Button>
         </HStack>
 
-        <Card>
-          <CardBody>
-            <VStack align="stretch" spacing={4}>
-              <Heading size="md">Book an Appointment</Heading>
-              <Text color="gray.600">
-                Choose a doctor and preferred time. We will confirm your appointment.
-              </Text>
-              <Divider />
+        {canBookAppointment && (
+          <Card>
+            <CardBody>
+              <VStack align="stretch" spacing={4}>
+                <Heading size="md">Book an Appointment</Heading>
+                <Text color="gray.600">
+                  Choose a doctor and preferred time. We will confirm your appointment.
+                </Text>
+                <Divider />
 
-              <Box as="form" onSubmit={handleSubmit}>
-                <VStack spacing={4} align="stretch">
-                  <HStack spacing={4} align="flex-start">
-                    <FormControl isRequired>
-                      <FormLabel>Appointment Title</FormLabel>
-                      <Input
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
-                        placeholder="e.g., Follow-up consultation"
-                      />
-                    </FormControl>
+                <Box as="form" onSubmit={handleSubmit}>
+                  <VStack spacing={4} align="stretch">
+                    <HStack spacing={4} align="flex-start">
+                      <FormControl isRequired>
+                        <FormLabel>Appointment Title</FormLabel>
+                        <Input
+                          name="title"
+                          value={formData.title}
+                          onChange={handleChange}
+                          placeholder="e.g., Follow-up consultation"
+                        />
+                      </FormControl>
 
-                    <FormControl isRequired>
-                      <FormLabel>Type</FormLabel>
-                      <Select name="type" value={formData.type} onChange={handleChange}>
-                        <option value="checkup">Checkup</option>
-                        <option value="follow-up">Follow-up</option>
-                        <option value="therapy">Therapy</option>
-                        <option value="consultation">Consultation</option>
-                        <option value="test">Test</option>
-                        <option value="other">Other</option>
-                      </Select>
-                    </FormControl>
-                  </HStack>
+                      <FormControl isRequired>
+                        <FormLabel>Type</FormLabel>
+                        <Select name="type" value={formData.type} onChange={handleChange}>
+                          <option value="checkup">Checkup</option>
+                          <option value="follow-up">Follow-up</option>
+                          <option value="therapy">Therapy</option>
+                          <option value="consultation">Consultation</option>
+                          <option value="test">Test</option>
+                          <option value="other">Other</option>
+                        </Select>
+                      </FormControl>
+                    </HStack>
 
                   <FormControl isRequired>
                     <FormLabel>Choose a Doctor</FormLabel>
@@ -382,14 +394,23 @@ const Appointments = () => {
                     />
                   </FormControl>
 
-                  <Button type="submit" isLoading={saving} loadingText="Booking...">
-                    Book Appointment
-                  </Button>
-                </VStack>
-              </Box>
-            </VStack>
-          </CardBody>
-        </Card>
+                    <Button type="submit" isLoading={saving} loadingText="Booking...">
+                      Book Appointment
+                    </Button>
+                  </VStack>
+                </Box>
+              </VStack>
+            </CardBody>
+          </Card>
+        )}
+
+        {!canBookAppointment && (
+          <Card>
+            <CardBody>
+              <Text color="gray.600">You can view appointments assigned to your doctor account here.</Text>
+            </CardBody>
+          </Card>
+        )}
 
         {appointments.length === 0 ? (
           <Card>

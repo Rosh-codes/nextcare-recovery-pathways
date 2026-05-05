@@ -20,6 +20,10 @@ const appointmentSchema = new mongoose.Schema({
     specialty: String,
     facility: String
   },
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Doctor'
+  },
   dateTime: {
     type: Date,
     required: true

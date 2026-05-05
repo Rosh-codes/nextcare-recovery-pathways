@@ -59,6 +59,7 @@ export const login = async (req, res) => {
         _id: user._id,
         email: user.email,
         role: user.role,
+        doctorId: user.doctorId,
         profile: user.profile,
         onboardingCompleted: user.onboardingCompleted,
         token: generateToken(user._id, user.email, user.role)
@@ -79,6 +80,7 @@ export const getMe = async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     res.json({
       ...user.toObject(),
+      doctorId: user.doctorId,
       role: req.user.role === 'admin' || req.user.tokenRole === 'admin' ? 'admin' : user.role
     });
   } catch (error) {

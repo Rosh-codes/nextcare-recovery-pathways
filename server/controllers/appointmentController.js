@@ -1,10 +1,41 @@
 import Appointment from '../models/Appointment.js';
 
+const buildProviderNameCandidates = (user) => {
+  const candidates = [];
+
+  if (user?.profile?.firstName && user?.profile?.lastName) {
+    const fullName = `${user.profile.firstName} ${user.profile.lastName}`.trim();
+    candidates.push(fullName);
+    candidates.push(`Dr. ${fullName}`);
+  }
+
+  if (user?.profile?.firstName) {
+    candidates.push(`Dr. ${user.profile.firstName}`);
+  }
+
+  return [...new Set(candidates.filter(Boolean))];
+};
+
 // @desc    Get all appointments for a user
 // @route   GET /api/appointments
 // @access  Private
 export const getAppointments = async (req, res) => {
   try {
+    if (req.user.role === 'doctor' || req.user.role === 'healthcare_provider') {
+      const providerCandidates = buildProviderNameCandidates(req.user);
+      const query = {
+        $or: [
+          { userId: req.user.id },
+          ...(req.user.doctorId ? [{ doctorId: req.user.doctorId }] : []),
+          ...(providerCandidates.length > 0 ? [{ 'provider.name': { $in: providerCandidates } }] : [])
+        ]
+      };
+
+      const appointments = await Appointment.find(query)
+        .sort({ dateTime: 1 });
+      return res.json(appointments);
+    }
+
     const appointments = await Appointment.find({ userId: req.user.id })
       .sort({ dateTime: 1 });
     res.json(appointments);

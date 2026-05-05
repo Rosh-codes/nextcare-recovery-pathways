@@ -13,7 +13,7 @@ export const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Always load fresh user data from DB so role changes apply immediately.
-      const user = await User.findById(decoded.id).select('_id email role');
+      const user = await User.findById(decoded.id).select('_id email role doctorId');
       if (!user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
@@ -22,6 +22,7 @@ export const protect = async (req, res, next) => {
         id: user._id.toString(),
         email: user.email,
         role: user.role,
+        doctorId: user.doctorId ? user.doctorId.toString() : undefined,
         tokenRole: decoded.role
       };
 

@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
     enum: ['patient', 'admin', 'doctor', 'healthcare_provider'],
     default: 'patient'
   },
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Doctor'
+  },
   profile: {
     firstName: String,
     lastName: String,
