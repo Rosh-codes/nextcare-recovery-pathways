@@ -18,7 +18,15 @@ import {
   Input,
   Select,
   InputGroup,
-  InputLeftElement
+  InputLeftElement,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  ModalFooter,
+  Link
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch } from 'react-icons/fi';
@@ -29,6 +37,7 @@ const HealthResources = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedResource, setSelectedResource] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -88,6 +97,22 @@ const HealthResources = () => {
       other: 'gray'
     };
     return colors[category] || 'gray';
+  };
+
+  const handleOpenResource = (resource) => {
+    setSelectedResource(resource);
+  };
+
+  const handleCloseResource = () => {
+    setSelectedResource(null);
+  };
+
+  const handleOpenExternalResource = (url) => {
+    if (!url) {
+      return;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
@@ -171,6 +196,15 @@ const HealthResources = () => {
                 _hover={{ shadow: 'lg', transform: 'translateY(-4px)' }}
                 transition="all 0.2s"
                 cursor="pointer"
+                onClick={() => handleOpenResource(resource)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleOpenResource(resource);
+                  }
+                }}
               >
                 <CardBody>
                   <VStack align="stretch" spacing={3}>
@@ -225,6 +259,65 @@ const HealthResources = () => {
             ))}
           </SimpleGrid>
         )}
+
+        <Modal isOpen={!!selectedResource} onClose={handleCloseResource} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>{selectedResource?.title}</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              {selectedResource && (
+                <VStack align="stretch" spacing={4}>
+                  <HStack justify="space-between" align="start">
+                    <Badge colorScheme={getCategoryColor(selectedResource.category)}>
+                      {selectedResource.category}
+                    </Badge>
+                    {selectedResource.featured && <Badge colorScheme="yellow">Featured</Badge>}
+                  </HStack>
+
+                  <Text color="gray.600">{selectedResource.description}</Text>
+
+                  {selectedResource.content && (
+                    <Box>
+                      <Heading size="sm" mb={2}>Details</Heading>
+                      <Text whiteSpace="pre-wrap" color="gray.700">
+                        {selectedResource.content}
+                      </Text>
+                    </Box>
+                  )}
+
+                  <HStack spacing={3} flexWrap="wrap">
+                    {selectedResource.author && <Badge variant="subtle">By {selectedResource.author}</Badge>}
+                    {selectedResource.duration && <Badge variant="subtle">{selectedResource.duration}</Badge>}
+                    {selectedResource.difficulty && <Badge variant="subtle">{selectedResource.difficulty}</Badge>}
+                  </HStack>
+
+                  {selectedResource.tags && selectedResource.tags.length > 0 && (
+                    <HStack spacing={2} flexWrap="wrap">
+                      {selectedResource.tags.map((tag, index) => (
+                        <Badge key={index} colorScheme="blue" variant="outline">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </HStack>
+                  )}
+                </VStack>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <HStack spacing={3}>
+                {selectedResource?.url && (
+                  <Button colorScheme="primary" onClick={() => handleOpenExternalResource(selectedResource.url)}>
+                    Open Resource
+                  </Button>
+                )}
+                <Button variant="outline" onClick={handleCloseResource}>
+                  Close
+                </Button>
+              </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </VStack>
     </Container>
   );
