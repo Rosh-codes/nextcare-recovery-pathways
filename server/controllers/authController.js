@@ -77,7 +77,10 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.json(user);
+    res.json({
+      ...user.toObject(),
+      role: req.user.role === 'admin' || req.user.tokenRole === 'admin' ? 'admin' : user.role
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

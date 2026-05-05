@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -11,8 +12,18 @@ export const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Add user from payload
-      req.user = decoded;
+      // Always load fresh user data from DB so role changes apply immediately.
+      const user = await User.findById(decoded.id).select('_id email role');
+      if (!user) {
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+
+      req.user = {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role,
+        tokenRole: decoded.role
+      };
 
       next();
     } catch (error) {
@@ -27,7 +38,7 @@ export const protect = async (req, res, next) => {
 };
 
 export const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && (req.user.role === 'admin' || req.user.tokenRole === 'admin')) {
     next();
   } else {
     res.status(403).json({ message: 'Not authorized as admin' });
