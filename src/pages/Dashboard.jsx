@@ -19,7 +19,8 @@ import {
   Spinner,
   Center,
   Divider,
-  Icon
+  Icon,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { FiCalendar, FiActivity, FiBook, FiTrendingUp } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -32,6 +33,11 @@ const Dashboard = () => {
   const [healthResources, setHealthResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const sectionCardBg = useColorModeValue('white', 'gray.800');
+  const sectionCardHoverBg = useColorModeValue('gray.50', 'gray.700');
+  const mutedText = useColorModeValue('gray.600', 'gray.300');
+  const subtleText = useColorModeValue('gray.500', 'gray.400');
+  const sectionCardBorder = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     fetchDashboardData();
@@ -141,7 +147,7 @@ const Dashboard = () => {
           <Divider />
           <CardBody>
             {appointments.length === 0 ? (
-              <Text color="gray.500">No upcoming appointments</Text>
+              <Text color={subtleText}>No upcoming appointments</Text>
             ) : (
               <VStack spacing={3} align="stretch">
                 {appointments.map((appointment) => (
@@ -150,15 +156,17 @@ const Dashboard = () => {
                     p={4}
                     borderWidth={1}
                     borderRadius="md"
-                    _hover={{ bg: 'gray.50' }}
+                    bg={sectionCardBg}
+                    borderColor={sectionCardBorder}
+                    _hover={{ bg: sectionCardHoverBg }}
                   >
                     <HStack justify="space-between">
                       <Box>
                         <Text fontWeight="bold">{appointment.title}</Text>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color={mutedText}>
                           {appointment.provider?.name} - {appointment.provider?.specialty}
                         </Text>
-                        <Text fontSize="sm" color="gray.500">
+                        <Text fontSize="sm" color={subtleText}>
                           {format(new Date(appointment.dateTime), 'PPP p')}
                         </Text>
                       </Box>
@@ -182,7 +190,7 @@ const Dashboard = () => {
           <Divider />
           <CardBody>
             {carePlans.length === 0 ? (
-              <Text color="gray.500">No active care plans</Text>
+              <Text color={subtleText}>No active care plans</Text>
             ) : (
               <VStack spacing={3} align="stretch">
                 {carePlans.map((plan) => (
@@ -191,15 +199,17 @@ const Dashboard = () => {
                     p={4}
                     borderWidth={1}
                     borderRadius="md"
-                    _hover={{ bg: 'gray.50' }}
+                    bg={sectionCardBg}
+                    borderColor={sectionCardBorder}
+                    _hover={{ bg: sectionCardHoverBg }}
                   >
                     <HStack justify="space-between">
                       <Box>
                         <Text fontWeight="bold">{plan.title}</Text>
-                        <Text fontSize="sm" color="gray.600">{plan.description}</Text>
+                        <Text fontSize="sm" color={mutedText}>{plan.description}</Text>
                       </Box>
                       <Box textAlign="right">
-                        <Text fontSize="sm" color="gray.600">Progress</Text>
+                        <Text fontSize="sm" color={mutedText}>Progress</Text>
                         <Text fontWeight="bold">{plan.progress}%</Text>
                       </Box>
                     </HStack>
@@ -221,7 +231,7 @@ const Dashboard = () => {
           <Divider />
           <CardBody>
             {healthResources.length === 0 ? (
-              <Text color="gray.500">No resources available</Text>
+              <Text color={subtleText}>No resources available</Text>
             ) : (
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                 {healthResources.map((resource) => (
@@ -230,15 +240,17 @@ const Dashboard = () => {
                     p={4}
                     borderWidth={1}
                     borderRadius="md"
-                    _hover={{ bg: 'gray.50' }}
+                    bg={sectionCardBg}
+                    borderColor={sectionCardBorder}
+                    _hover={{ bg: sectionCardHoverBg }}
                   >
                     <Badge mb={2}>{resource.category}</Badge>
                     <Text fontWeight="bold">{resource.title}</Text>
-                    <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                    <Text fontSize="sm" color={mutedText} noOfLines={2}>
                       {resource.description}
                     </Text>
                     {resource.duration && (
-                      <Text fontSize="xs" color="gray.500" mt={2}>
+                      <Text fontSize="xs" color={subtleText} mt={2}>
                         {resource.duration}
                       </Text>
                     )}
