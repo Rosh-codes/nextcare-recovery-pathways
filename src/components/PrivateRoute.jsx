@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Box, Spinner, Center } from '@chakra-ui/react';
 
-const PrivateRoute = ({ children, requireAdmin = false }) => {
+const PrivateRoute = ({ children, requireAdmin = false, allowedRoles = null }) => {
   const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
@@ -18,6 +18,10 @@ const PrivateRoute = ({ children, requireAdmin = false }) => {
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 

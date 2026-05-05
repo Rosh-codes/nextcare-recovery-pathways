@@ -76,6 +76,11 @@ const Navbar = () => {
           <Button as={RouterLink} to="/resources" variant="ghost" size="sm">
             Resources
           </Button>
+          {(user?.role === 'doctor' || user?.role === 'healthcare_provider' || isAdmin) && (
+            <Button as={RouterLink} to="/patient-records" variant="ghost" size="sm">
+              Patient Records
+            </Button>
+          )}
           <Button as={RouterLink} to="/profile" variant="ghost" size="sm">
             Profile
           </Button>

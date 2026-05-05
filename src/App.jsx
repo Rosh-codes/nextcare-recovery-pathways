@@ -9,6 +9,7 @@ import Admin from './pages/Admin';
 import Appointments from './pages/Appointments';
 import CarePlans from './pages/CarePlans';
 import HealthResources from './pages/HealthResources';
+import PatientRecords from './pages/PatientRecords';
 import NotFound from './pages/NotFound';
 import PrivateRoute from './components/PrivateRoute';
 import AppLayout from './components/AppLayout';
@@ -54,6 +55,12 @@ function App() {
           <Route path="/resources" element={
             <PrivateRoute>
               <HealthResources />
+            </PrivateRoute>
+          } />
+
+          <Route path="/patient-records" element={
+            <PrivateRoute allowedRoles={['admin', 'doctor', 'healthcare_provider']}>
+              <PatientRecords />
             </PrivateRoute>
           } />
           

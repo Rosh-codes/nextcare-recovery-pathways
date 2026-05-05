@@ -35,6 +35,8 @@ export const userAPI = {
   getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
   getAllUsers: () => api.get('/users'),
+  getPatients: () => api.get('/users/patients'),
+  updateClinicalDetails: (id, data) => api.put(`/users/${id}/clinical`, data),
   deleteUser: (id) => api.delete(`/users/${id}`)
 };
 

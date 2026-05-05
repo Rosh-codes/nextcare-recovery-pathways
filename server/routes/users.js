@@ -3,6 +3,7 @@ import {
   getUserProfile, 
   updateUserProfile, 
   getAllUsers, 
+  getPatients,
   deleteUser,
   updateUserClinicalDetails,
   clearUserClinicalDetails,
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.get('/', protect, admin, getAllUsers);
+router.get('/patients', protect, getPatients);
 router.delete('/:id', protect, admin, deleteUser);
 router.put('/:id/profile', protect, admin, updatePatientProfileDetails);
 router.put('/:id/clinical', protect, admin, updateUserClinicalDetails);

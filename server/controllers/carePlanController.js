@@ -39,9 +39,30 @@ export const getCarePlan = async (req, res) => {
 // @access  Private
 export const createCarePlan = async (req, res) => {
   try {
+    const goalItems = typeof req.body.goalText === 'string'
+      ? req.body.goalText.split('\n').map((goal) => goal.trim()).filter(Boolean)
+      : [];
+
+    const actionItems = typeof req.body.recommendedActions === 'string'
+      ? req.body.recommendedActions.split('\n').map((action) => action.trim()).filter(Boolean)
+      : [];
+
     const carePlan = await CarePlan.create({
-      userId: req.user.id,
-      ...req.body
+      userId: req.body.patientId || req.body.userId || req.user.id,
+      title: req.body.title,
+      description: req.body.description || req.body.goalText || '',
+      goals: req.body.goals?.length ? req.body.goals : goalItems.map((goal) => ({ description: goal })),
+      tasks: req.body.tasks?.length ? req.body.tasks : actionItems.map((action) => ({ title: action, description: action })),
+      assignedBy: {
+        name: req.user.email,
+        role: req.user.role,
+        date: new Date()
+      },
+      startDate: req.body.startDate || new Date(),
+      endDate: req.body.endDate,
+      status: req.body.status || 'active',
+      progress: req.body.progress ?? 0,
+      medications: req.body.medications || []
     });
 
     res.status(201).json(carePlan);

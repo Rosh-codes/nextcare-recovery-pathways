@@ -1,5 +1,7 @@
 import User from '../models/User.js';
 
+const canManageClinicalData = (role) => role === 'admin' || role === 'doctor' || role === 'healthcare_provider';
+
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
@@ -78,6 +80,22 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+// @desc    Get all patient users for clinical workflows
+// @route   GET /api/users/patients
+// @access  Private/Doctor/Admin
+export const getPatients = async (req, res) => {
+  try {
+    if (!canManageClinicalData(req.user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const patients = await User.find({ role: 'patient' }).select('-password');
+    res.json(patients);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Delete user (Admin only)
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
@@ -101,6 +119,10 @@ export const deleteUser = async (req, res) => {
 // @access  Private/Admin
 export const updateUserClinicalDetails = async (req, res) => {
   try {
+    if (!canManageClinicalData(req.user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -168,6 +190,10 @@ export const updatePatientProfileDetails = async (req, res) => {
 // @access  Private/Admin
 export const clearUserClinicalDetails = async (req, res) => {
   try {
+    if (!canManageClinicalData(req.user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
     const user = await User.findById(req.params.id);
 
     if (!user) {

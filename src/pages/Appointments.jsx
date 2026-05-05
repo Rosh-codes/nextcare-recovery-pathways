@@ -25,7 +25,7 @@ import {
   Divider,
   Avatar
 } from '@chakra-ui/react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 const Appointments = () => {
@@ -101,6 +101,21 @@ const Appointments = () => {
       default:
         return 'gray';
     }
+  };
+
+  const isUpcomingAppointment = (appointment) => {
+    return appointment.status === 'scheduled' && new Date(appointment.dateTime) >= new Date();
+  };
+
+  const upcomingAppointments = appointments.filter(isUpcomingAppointment);
+  const pastAppointments = appointments.filter((appointment) => !isUpcomingAppointment(appointment));
+
+  const formatAppointmentDateTime = (value) => {
+    const date = new Date(value);
+    if (!isValid(date)) {
+      return 'Date/time unavailable';
+    }
+    return format(date, 'PPP p');
   };
 
   const handleChange = (e) => {
@@ -184,6 +199,28 @@ const Appointments = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId) => {
+    try {
+      const response = await appointmentAPI.update(appointmentId, { status: 'cancelled' });
+      setAppointments((prev) => prev.map((appointment) => (appointment._id === appointmentId ? response.data : appointment)));
+
+      toast({
+        title: 'Appointment cancelled',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Cancellation failed',
+        description: error.response?.data?.message || 'Something went wrong',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -356,17 +393,26 @@ const Appointments = () => {
             </CardBody>
           </Card>
         ) : (
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-            {appointments.map((appointment) => (
-              <Card key={appointment._id} _hover={{ shadow: 'lg' }} transition="all 0.2s">
-                <CardBody>
-                  <VStack align="stretch" spacing={3}>
-                    <HStack justify="space-between">
-                      <Heading size="md">{appointment.title}</Heading>
-                      <Badge colorScheme={getStatusColor(appointment.status)}>
-                        {appointment.status}
-                      </Badge>
-                    </HStack>
+          <VStack spacing={6} align="stretch">
+            <Box>
+              <HStack justify="space-between" mb={3}>
+                <Heading size="md">Upcoming Appointments</Heading>
+                <Badge colorScheme="blue">{upcomingAppointments.length}</Badge>
+              </HStack>
+              {upcomingAppointments.length === 0 ? (
+                <Text color="gray.500">No upcoming appointments</Text>
+              ) : (
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                  {upcomingAppointments.map((appointment) => (
+                    <Card key={appointment._id} _hover={{ shadow: 'lg' }} transition="all 0.2s">
+                      <CardBody>
+                        <VStack align="stretch" spacing={3}>
+                          <HStack justify="space-between">
+                            <Heading size="md">{appointment.title}</Heading>
+                            <Badge colorScheme={getStatusColor(appointment.status)}>
+                              {appointment.status}
+                            </Badge>
+                          </HStack>
 
                     {appointment.provider && (
                       <Box>
@@ -383,7 +429,7 @@ const Appointments = () => {
                       <Text fontWeight="semibold" fontSize="sm" color="gray.600">
                         Date & Time
                       </Text>
-                      <Text>{format(new Date(appointment.dateTime), 'PPP p')}</Text>
+                      <Text>{formatAppointmentDateTime(appointment.dateTime)}</Text>
                     </Box>
 
                     {appointment.location && (
@@ -401,19 +447,99 @@ const Appointments = () => {
                       </Box>
                     )}
 
-                    {appointment.notes && (
-                      <Box>
-                        <Text fontWeight="semibold" fontSize="sm" color="gray.600">
-                          Notes
-                        </Text>
-                        <Text fontSize="sm">{appointment.notes}</Text>
-                      </Box>
-                    )}
-                  </VStack>
-                </CardBody>
-              </Card>
-            ))}
-          </SimpleGrid>
+                          {appointment.notes && (
+                            <Box>
+                              <Text fontWeight="semibold" fontSize="sm" color="gray.600">
+                                Notes
+                              </Text>
+                              <Text fontSize="sm">{appointment.notes}</Text>
+                            </Box>
+                          )}
+
+                          <Button
+                            colorScheme="red"
+                            variant="outline"
+                            onClick={() => handleCancelAppointment(appointment._id)}
+                          >
+                            Cancel
+                          </Button>
+                        </VStack>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </SimpleGrid>
+              )}
+            </Box>
+
+            <Box>
+              <HStack justify="space-between" mb={3}>
+                <Heading size="md">Past Appointments</Heading>
+                <Badge colorScheme="gray">{pastAppointments.length}</Badge>
+              </HStack>
+              {pastAppointments.length === 0 ? (
+                <Text color="gray.500">No past appointments</Text>
+              ) : (
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                  {pastAppointments.map((appointment) => (
+                    <Card key={appointment._id} _hover={{ shadow: 'lg' }} transition="all 0.2s">
+                      <CardBody>
+                        <VStack align="stretch" spacing={3}>
+                          <HStack justify="space-between">
+                            <Heading size="md">{appointment.title}</Heading>
+                            <Badge colorScheme={getStatusColor(appointment.status)}>
+                              {appointment.status}
+                            </Badge>
+                          </HStack>
+
+                          {appointment.provider && (
+                            <Box>
+                              <Text fontWeight="semibold" fontSize="sm" color="gray.600">
+                                Provider
+                              </Text>
+                              <Text>
+                                {appointment.provider.name} - {appointment.provider.specialty}
+                              </Text>
+                            </Box>
+                          )}
+
+                          <Box>
+                            <Text fontWeight="semibold" fontSize="sm" color="gray.600">
+                              Date & Time
+                            </Text>
+                            <Text>{formatAppointmentDateTime(appointment.dateTime)}</Text>
+                          </Box>
+
+                          {appointment.location && (
+                            <Box>
+                              <Text fontWeight="semibold" fontSize="sm" color="gray.600">
+                                Location
+                              </Text>
+                              <Text>{appointment.location?.address || appointment.location}</Text>
+                            </Box>
+                          )}
+
+                          {appointment.type && (
+                            <Box>
+                              <Badge colorScheme="purple">{appointment.type}</Badge>
+                            </Box>
+                          )}
+
+                          {appointment.notes && (
+                            <Box>
+                              <Text fontWeight="semibold" fontSize="sm" color="gray.600">
+                                Notes
+                              </Text>
+                              <Text fontSize="sm">{appointment.notes}</Text>
+                            </Box>
+                          )}
+                        </VStack>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </SimpleGrid>
+              )}
+            </Box>
+          </VStack>
         )}
       </VStack>
     </Container>

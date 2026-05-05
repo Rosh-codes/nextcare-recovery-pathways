@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { carePlanAPI } from '../services/api';
+import { carePlanAPI, userAPI } from '../services/api';
 import {
   Box,
   Container,
@@ -16,20 +16,37 @@ import {
   Card,
   CardBody,
   Progress,
-  SimpleGrid
+  SimpleGrid,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Textarea
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 
 const CarePlans = () => {
   const { user } = useAuth();
   const [carePlans, setCarePlans] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [doctorForm, setDoctorForm] = useState({
+    patientId: '',
+    title: '',
+    goalText: '',
+    recommendedActions: ''
+  });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const toast = useToast();
   const navigate = useNavigate();
+  const canManagePlans = user?.role === 'doctor' || user?.role === 'healthcare_provider' || user?.role === 'admin';
 
   useEffect(() => {
     fetchCarePlans();
-  }, []);
+    if (canManagePlans) {
+      fetchPatients();
+    }
+  }, [canManagePlans]);
 
   const fetchCarePlans = async () => {
     try {
@@ -45,6 +62,66 @@ const CarePlans = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await userAPI.getPatients();
+      setPatients(response.data);
+      if (response.data.length > 0) {
+        setDoctorForm((prev) => ({ ...prev, patientId: response.data[0]._id }));
+      }
+    } catch (error) {
+      toast({
+        title: 'Error loading patients',
+        description: error.response?.data?.message || 'Something went wrong',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleDoctorFormChange = (e) => {
+    setDoctorForm({ ...doctorForm, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateCarePlan = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      await carePlanAPI.create({
+        patientId: doctorForm.patientId,
+        title: doctorForm.title,
+        goalText: doctorForm.goalText,
+        recommendedActions: doctorForm.recommendedActions,
+      });
+
+      toast({
+        title: 'Care plan created',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      setDoctorForm((prev) => ({
+        ...prev,
+        title: '',
+        goalText: '',
+        recommendedActions: ''
+      }));
+    } catch (error) {
+      toast({
+        title: 'Error creating care plan',
+        description: error.response?.data?.message || 'Something went wrong',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -83,6 +160,43 @@ const CarePlans = () => {
             Back to Dashboard
           </Button>
         </HStack>
+
+        {canManagePlans && (
+          <Card>
+            <CardBody>
+              <Box as="form" onSubmit={handleCreateCarePlan}>
+                <VStack align="stretch" spacing={4}>
+                  <Heading size="md">Create Care Plan</Heading>
+                  <FormControl isRequired>
+                    <FormLabel>Patient</FormLabel>
+                    <Select name="patientId" value={doctorForm.patientId} onChange={handleDoctorFormChange}>
+                      {patients.map((patient) => (
+                        <option key={patient._id} value={patient._id}>
+                          {patient.profile?.firstName} {patient.profile?.lastName} - {patient.email}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl isRequired>
+                    <FormLabel>Plan Title</FormLabel>
+                    <Input name="title" value={doctorForm.title} onChange={handleDoctorFormChange} placeholder="Recovery plan" />
+                  </FormControl>
+                  <FormControl isRequired>
+                    <FormLabel>Goals</FormLabel>
+                    <Textarea name="goalText" value={doctorForm.goalText} onChange={handleDoctorFormChange} placeholder="One goal per line" />
+                  </FormControl>
+                  <FormControl isRequired>
+                    <FormLabel>Recommended Actions</FormLabel>
+                    <Textarea name="recommendedActions" value={doctorForm.recommendedActions} onChange={handleDoctorFormChange} placeholder="One recommended action per line" />
+                  </FormControl>
+                  <Button type="submit" colorScheme="primary" isLoading={saving} loadingText="Saving..." isDisabled={!patients.length}>
+                    Save
+                  </Button>
+                </VStack>
+              </Box>
+            </CardBody>
+          </Card>
+        )}
 
         {carePlans.length === 0 ? (
           <Card>
@@ -145,7 +259,7 @@ const CarePlans = () => {
                                 textDecoration={goal.completed ? 'line-through' : 'none'}
                                 color={goal.completed ? 'gray.500' : 'gray.700'}
                               >
-                                {goal.description}
+                                {goal.description || goal.title}
                               </Text>
                             </HStack>
                           ))}
@@ -153,15 +267,15 @@ const CarePlans = () => {
                       </Box>
                     )}
 
-                    {plan.activities && plan.activities.length > 0 && (
+                    {plan.tasks && plan.tasks.length > 0 && (
                       <Box>
                         <Text fontWeight="semibold" fontSize="sm" mb={2} color="gray.600">
-                          Activities
+                          Recommended Actions
                         </Text>
                         <HStack spacing={2} flexWrap="wrap">
-                          {plan.activities.map((activity, index) => (
+                          {plan.tasks.map((activity, index) => (
                             <Badge key={index} colorScheme="blue" variant="subtle">
-                              {activity}
+                              {activity.title || activity.description || activity}
                             </Badge>
                           ))}
                         </HStack>
