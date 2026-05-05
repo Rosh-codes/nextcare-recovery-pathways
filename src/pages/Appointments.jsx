@@ -118,6 +118,18 @@ const Appointments = () => {
     return format(date, 'PPP p');
   };
 
+  const formatAppointmentLocation = (location) => {
+    if (!location) {
+      return 'Location unavailable';
+    }
+
+    if (typeof location === 'string') {
+      return location;
+    }
+
+    return location.address || location.type || 'Location unavailable';
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -437,7 +449,7 @@ const Appointments = () => {
                         <Text fontWeight="semibold" fontSize="sm" color="gray.600">
                           Location
                         </Text>
-                        <Text>{appointment.location?.address || appointment.location}</Text>
+                        <Text>{formatAppointmentLocation(appointment.location)}</Text>
                       </Box>
                     )}
 
@@ -514,7 +526,7 @@ const Appointments = () => {
                               <Text fontWeight="semibold" fontSize="sm" color="gray.600">
                                 Location
                               </Text>
-                              <Text>{appointment.location?.address || appointment.location}</Text>
+                              <Text>{formatAppointmentLocation(appointment.location)}</Text>
                             </Box>
                           )}
 
