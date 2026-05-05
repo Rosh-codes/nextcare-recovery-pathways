@@ -76,7 +76,7 @@ const Appointments = () => {
   const fetchAppointments = async () => {
     try {
       const response = await appointmentAPI.getAll();
-      setAppointments(response.data);
+      setAppointments(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       toast({
         title: 'Error loading appointments',
@@ -167,8 +167,8 @@ const Appointments = () => {
         notes: formData.notes
       };
 
-      const response = await appointmentAPI.create(payload);
-      setAppointments(prev => [response.data, ...prev]);
+      await appointmentAPI.create(payload);
+      await fetchAppointments();
       setFormData({
         title: '',
         type: 'checkup',
@@ -204,8 +204,8 @@ const Appointments = () => {
 
   const handleCancelAppointment = async (appointmentId) => {
     try {
-      const response = await appointmentAPI.update(appointmentId, { status: 'cancelled' });
-      setAppointments((prev) => prev.map((appointment) => (appointment._id === appointmentId ? response.data : appointment)));
+      await appointmentAPI.update(appointmentId, { status: 'cancelled' });
+      await fetchAppointments();
 
       toast({
         title: 'Appointment cancelled',
