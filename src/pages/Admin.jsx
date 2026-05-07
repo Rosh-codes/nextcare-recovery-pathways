@@ -259,7 +259,7 @@ const Admin = () => {
                       <Th>Name</Th>
                       <Th>Email</Th>
                       <Th>Role</Th>
-                      <Th>Risk Score</Th>
+                      <Th>Health score</Th>
                       <Th>Onboarding</Th>
                       <Th>Actions</Th>
                     </Tr>

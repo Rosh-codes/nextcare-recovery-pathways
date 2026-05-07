@@ -197,7 +197,7 @@ const PatientRecords = () => {
               {selectedPatient && (
                 <HStack spacing={2} flexWrap="wrap">
                   <Badge colorScheme="blue">{selectedPatient.role}</Badge>
-                  <Badge colorScheme="purple">Risk {selectedPatient.riskScore || 0}</Badge>
+                  <Badge colorScheme="purple">Health score {selectedPatient.riskScore || 0}</Badge>
                   <Badge colorScheme={selectedPatient.onboardingCompleted ? 'green' : 'yellow'}>
                     {selectedPatient.onboardingCompleted ? 'Onboarding complete' : 'Onboarding pending'}
                   </Badge>
@@ -253,7 +253,7 @@ const PatientRecords = () => {
                     <Input name="sleepHours" type="number" value={formData.sleepHours} onChange={handleChange} />
                   </FormControl>
                   <FormControl>
-                    <FormLabel>Risk Score</FormLabel>
+                    <FormLabel>Health score</FormLabel>
                     <Input name="riskScore" type="number" value={formData.riskScore} onChange={handleChange} />
                   </FormControl>
                 </HStack>

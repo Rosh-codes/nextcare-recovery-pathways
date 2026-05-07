@@ -80,7 +80,7 @@ const Onboarding = () => {
     setLoading(true);
 
     try {
-      // Calculate risk score
+      // Calculate health score
       const userData = {
         medicalInfo,
         lifestyle

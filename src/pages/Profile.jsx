@@ -16,11 +16,36 @@ import {
   CardHeader,
   CardBody,
   Divider,
-  Text
+  Text,
+  Spinner,
+  Center
 } from '@chakra-ui/react';
+
+const formatValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.join(', ') : 'None recorded';
+  }
+
+  if (value === null || value === undefined || value === '') {
+    return 'Not recorded';
+  }
+
+  return value;
+};
+
+const formatHospitalizations = (hospitalizations = []) => {
+  if (!hospitalizations.length) {
+    return 'None recorded';
+  }
+
+  return hospitalizations
+    .map((entry) => entry.reason || entry.hospital || 'Hospitalization noted')
+    .join(', ');
+};
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
+  const [profileData, setProfileData] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -29,19 +54,55 @@ const Profile = () => {
     gender: ''
   });
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const toast = useToast();
 
+  const currentUser = profileData || user;
+
   useEffect(() => {
-    if (user?.profile) {
+    const userId = user?._id;
+
+    if (!userId) {
+      setProfileLoading(false);
+      return;
+    }
+
+    if (profileData?._id === userId) {
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const response = await userAPI.getProfile();
+        setProfileData(response.data);
+        updateUser(response.data);
+      } catch (error) {
+        toast({
+          title: 'Could not refresh profile',
+          description: error.response?.data?.message || 'Showing the last saved profile data',
+          status: 'warning',
+          duration: 4000,
+          isClosable: true,
+        });
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [profileData?._id, toast, updateUser, user?._id]);
+
+  useEffect(() => {
+    if (currentUser?.profile) {
       setFormData({
-        firstName: user.profile.firstName || '',
-        lastName: user.profile.lastName || '',
-        phone: user.profile.phone || '',
-        dateOfBirth: user.profile.dateOfBirth ? new Date(user.profile.dateOfBirth).toISOString().split('T')[0] : '',
-        gender: user.profile.gender || ''
+        firstName: currentUser.profile.firstName || '',
+        lastName: currentUser.profile.lastName || '',
+        phone: currentUser.profile.phone || '',
+        dateOfBirth: currentUser.profile.dateOfBirth ? new Date(currentUser.profile.dateOfBirth).toISOString().split('T')[0] : '',
+        gender: currentUser.profile.gender || ''
       });
     }
-  }, [user]);
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -54,6 +115,7 @@ const Profile = () => {
     try {
       const response = await userAPI.updateProfile({ profile: formData });
       updateUser(response.data);
+      setProfileData((prev) => ({ ...(prev || currentUser), ...response.data }));
       
       toast({
         title: 'Profile updated successfully',
@@ -73,6 +135,14 @@ const Profile = () => {
 
     setLoading(false);
   };
+
+  if (profileLoading) {
+    return (
+      <Center h="100vh">
+        <Spinner size="xl" color="primary.500" />
+      </Center>
+    );
+  }
 
   return (
     <Container maxW="container.md" py={8}>
@@ -152,14 +222,33 @@ const Profile = () => {
 
         <Card>
           <CardHeader>
-            <Heading size="md">Account Information</Heading>
+            <Heading size="md">Health Summary</Heading>
           </CardHeader>
           <Divider />
           <CardBody>
-            <VStack align="start" spacing={2}>
-              <Text><strong>Email:</strong> {user?.email}</Text>
-              <Text><strong>Role:</strong> {user?.role}</Text>
-              <Text><strong>Risk Score:</strong> {user?.riskScore || 0}</Text>
+            <VStack align="start" spacing={3}>
+              <Text><strong>Email:</strong> {currentUser?.email}</Text>
+              <Text><strong>Role:</strong> {currentUser?.role}</Text>
+              <Text><strong>Health score:</strong> {currentUser?.riskScore || 0}</Text>
+              <Box pt={2}>
+                <Heading size="sm" mb={2}>Clinical History</Heading>
+                <VStack align="start" spacing={1}>
+                  <Text><strong>Conditions:</strong> {formatValue(currentUser?.medicalInfo?.conditions)}</Text>
+                  <Text><strong>Allergies:</strong> {formatValue(currentUser?.medicalInfo?.allergies)}</Text>
+                  <Text><strong>Medications:</strong> {formatValue(currentUser?.medicalInfo?.medications)}</Text>
+                  <Text><strong>Hospitalizations:</strong> {formatHospitalizations(currentUser?.medicalInfo?.hospitalizations)}</Text>
+                </VStack>
+              </Box>
+              <Box pt={2}>
+                <Heading size="sm" mb={2}>Lifestyle</Heading>
+                <VStack align="start" spacing={1}>
+                  <Text><strong>Smoking status:</strong> {formatValue(currentUser?.lifestyle?.smokingStatus)}</Text>
+                  <Text><strong>Alcohol consumption:</strong> {formatValue(currentUser?.lifestyle?.alcoholConsumption)}</Text>
+                  <Text><strong>Exercise frequency:</strong> {formatValue(currentUser?.lifestyle?.exerciseFrequency)}</Text>
+                  <Text><strong>Diet type:</strong> {formatValue(currentUser?.lifestyle?.dietType)}</Text>
+                  <Text><strong>Sleep hours:</strong> {formatValue(currentUser?.lifestyle?.sleepHours)}</Text>
+                </VStack>
+              </Box>
             </VStack>
           </CardBody>
         </Card>

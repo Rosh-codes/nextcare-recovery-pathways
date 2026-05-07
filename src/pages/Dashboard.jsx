@@ -92,7 +92,7 @@ const Dashboard = () => {
               <HStack>
                 <Icon as={FiTrendingUp} boxSize={8} color="primary.500" />
                 <Box>
-                  <Text fontSize="sm" color="gray.600">Risk Score</Text>
+                  <Text fontSize="sm" color="gray.600">Health score</Text>
                   <Heading size="md">{user?.riskScore || 0}</Heading>
                 </Box>
               </HStack>
